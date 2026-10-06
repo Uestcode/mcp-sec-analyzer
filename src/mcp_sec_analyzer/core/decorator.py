@@ -102,6 +102,29 @@ def _default_summarizer(skill: str, tool_name: str, args: dict[str, Any], result
     if tool_name == "run_sast_scan":
         return f"SAST scan: found {result.get('sast_issues_detected', 0)} issues in {result.get('source_files_scanned', 0)} files"
 
+    # OSINT & Recon summarizers
+    if tool_name == "inspect_http_headers":
+        return f"HTTP headers for '{result.get('url')}': score={result.get('security_score_percentage')}%"
+    if tool_name == "inspect_tls_certificate":
+        return f"TLS cert '{result.get('hostname')}': {result.get('tls_version')}, expires in {result.get('days_until_expiration')} days"
+    if tool_name == "lookup_dns_records":
+        sp = result.get('email_security_posture', {})
+        return f"DNS posture for '{result.get('domain')}': SPF={sp.get('spf_assessment', 'N/A')}, DMARC={sp.get('dmarc_assessment', 'N/A')}"
+
+    # Threat Intel summarizers
+    if tool_name == "map_mitre_attack":
+        return f"MITRE ATT&CK: mapped '{result.get('query')}' to {result.get('techniques_matched', 0)} techniques"
+    if tool_name == "analyze_ioc_indicator":
+        return f"IOC analysis: '{result.get('raw_indicator')}' classified as {result.get('type')}"
+    if tool_name == "lookup_cve_details":
+        return f"CVE lookup for '{result.get('cve_id')}': {result.get('summary', 'Done')[:50]}"
+
+    # Cloud & Container Hardening summarizers
+    if tool_name == "audit_dockerfile":
+        return f"Dockerfile audit: {result.get('issues_detected', 0)} issues detected"
+    if tool_name == "audit_iam_policy":
+        return f"IAM policy audit: {result.get('risks_identified', 0)} privilege risks identified"
+
     # Memory specific summarizers
     if tool_name == "remember":
         return f"Saved [{result.get('category', 'note').upper()}]: '{result.get('title')}' (tags: {result.get('tags')})"

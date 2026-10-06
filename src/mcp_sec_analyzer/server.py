@@ -28,12 +28,26 @@ from .skills.rea.xrefs import find_xrefs_to_name as _find_xrefs_to_name
 from .skills.security_audit.dependencies import audit_dependencies as _audit_dependencies
 from .skills.security_audit.sast import run_sast_scan as _run_sast_scan
 from .skills.security_audit.secrets import scan_secrets as _scan_secrets
+from .skills.osint_recon.surface import (
+    inspect_http_headers as _inspect_http_headers,
+    inspect_tls_certificate as _inspect_tls_certificate,
+    lookup_dns_records as _lookup_dns_records,
+)
+from .skills.threat_intel.intel import (
+    map_mitre_attack as _map_mitre_attack,
+    analyze_ioc_indicator as _analyze_ioc_indicator,
+    lookup_cve_details as _lookup_cve_details,
+)
+from .skills.cloud_container.hardening import (
+    audit_dockerfile as _audit_dockerfile,
+    audit_iam_policy as _audit_iam_policy,
+)
 
 # Initialize MCP Server instance
 server = MCPServer(
     name="mcp-sec-analyzer",
-    version="1.2.0",
-    description="Multi-Skill Security, Reverse Engineering, and Auditing Platform with Universal Persistent Memory",
+    version="2.0.0",
+    description="Multi-Skill Cybersecurity Hub: Reverse Engineering, Auditing, OSINT, Threat Intel, and Cloud Hardening",
 )
 
 # ============================================================================
@@ -44,7 +58,8 @@ server = MCPServer(
 def list_skills() -> dict[str, Any]:
     """List available skills, active capabilities, and architecture modules in this MCP server."""
     return {
-        "platform": "Multi-Skill Security & Reverse Engineering MCP Hub",
+        "platform": "Multi-Skill Security Hub",
+        "total_active_skills": 6,
         "active_skills": [
             {
                 "id": "memory",
@@ -67,13 +82,34 @@ def list_skills() -> dict[str, Any]:
             },
             {
                 "id": "security_audit",
-                "name": "Defensive Security Audit & Hygiene (FuzzingLabs / Gitleaks / Trivy SAST)",
+                "name": "Defensive Security Audit & Hygiene (Gitleaks / Trivy SAST)",
                 "status": "active",
                 "description": "Secret leakage detection, supply chain / CVE dependency audit via OSV.dev, and SAST code rules.",
                 "tools": ["scan_secrets", "audit_dependencies", "run_sast_scan"],
             },
+            {
+                "id": "osint_recon",
+                "name": "Passive Reconnaissance & Surface Posture (OSINT)",
+                "status": "active",
+                "description": "HTTP security headers review, SSL/TLS certificate analysis, and DNS/SPF/DMARC email posture.",
+                "tools": ["inspect_http_headers", "inspect_tls_certificate", "lookup_dns_records"],
+            },
+            {
+                "id": "threat_intel",
+                "name": "Threat Intelligence & MITRE ATT&CK Defense",
+                "status": "active",
+                "description": "MITRE ATT&CK technique mapping, IOC validation/defanging, and CVE vulnerability lookup.",
+                "tools": ["map_mitre_attack", "analyze_ioc_indicator", "lookup_cve_details"],
+            },
+            {
+                "id": "cloud_container",
+                "name": "Cloud Security & Container Hardening",
+                "status": "active",
+                "description": "Dockerfile CIS benchmark auditing and Cloud/AWS IAM policy least-privilege analysis.",
+                "tools": ["audit_dockerfile", "audit_iam_policy"],
+            },
         ],
-        "extensibility": "New skills can be dropped into the skills directory and registered seamlessly.",
+        "extensibility": "Modular architecture allows adding new security domains in skills/ effortlessly.",
     }
 
 
@@ -354,6 +390,118 @@ def run_sast_scan(target_path: str, max_findings: int = 100) -> dict[str, Any]:
         max_findings: Maximum issues to return (default: 100).
     """
     return _run_sast_scan(target_path=target_path, max_findings=max_findings)
+
+
+# ============================================================================
+# SKILL: PASSIVE RECONNAISSANCE & SURFACE POSTURE (OSINT)
+# ============================================================================
+
+@server.tool()
+@skill_tool(skill="osint_recon")
+def inspect_http_headers(url: str) -> dict[str, Any]:
+    """Inspect HTTP security headers and identify missing browser protections or info leaks.
+
+    Evaluates HSTS, CSP, X-Frame-Options, X-Content-Type-Options, Referrer-Policy,
+    and flags server banner disclosure (Server, X-Powered-By).
+
+    Args:
+        url: Target web URL or domain (e.g. 'https://example.com').
+    """
+    return _inspect_http_headers(target_url=url)
+
+
+@server.tool()
+@skill_tool(skill="osint_recon")
+def inspect_tls_certificate(hostname: str, port: int = 443) -> dict[str, Any]:
+    """Inspect SSL/TLS certificate validity, expiration, issuer, SANs, and protocol version.
+
+    Args:
+        hostname: Domain name or host to inspect (e.g. 'example.com').
+        port: Port number (default: 443).
+    """
+    return _inspect_tls_certificate(hostname=hostname, port=port)
+
+
+@server.tool()
+@skill_tool(skill="osint_recon")
+def lookup_dns_records(domain: str) -> dict[str, Any]:
+    """Lookup DNS records and audit SPF and DMARC email spoofing defense posture.
+
+    Args:
+        domain: Target domain name (e.g. 'example.com').
+    """
+    return _lookup_dns_records(domain=domain)
+
+
+# ============================================================================
+# SKILL: THREAT INTELLIGENCE & MITRE ATT&CK DEFENSE
+# ============================================================================
+
+@server.tool()
+@skill_tool(skill="threat_intel")
+def map_mitre_attack(query: str) -> dict[str, Any]:
+    """Map security observations, APIs, or behaviors to the MITRE ATT&CK framework.
+
+    Returns tactics, technique IDs, descriptions, and defensive mitigations.
+
+    Args:
+        query: Technique name, ID, or behavior keyword (e.g. 'process injection', 'T1059', 'mimikatz').
+    """
+    return _map_mitre_attack(query=query)
+
+
+@server.tool()
+@skill_tool(skill="threat_intel")
+def analyze_ioc_indicator(indicator: str) -> dict[str, Any]:
+    """Categorize, validate, and safely defang an Indicator of Compromise (IOC).
+
+    Validates IPv4, IPv6, MD5, SHA-256, URL, domain, or email, defanging it for safe documentation
+    and suggesting threat hunting/containment steps.
+
+    Args:
+        indicator: Raw indicator string (e.g., '192.168.1.1', 'http://malicious.test', 'd41d8cd98f...').
+    """
+    return _analyze_ioc_indicator(indicator=indicator)
+
+
+@server.tool()
+@skill_tool(skill="threat_intel")
+def lookup_cve_details(cve_id: str) -> dict[str, Any]:
+    """Retrieve details and advisories for a specific CVE from the OSV open vulnerability database.
+
+    Args:
+        cve_id: Standard CVE identifier (e.g., 'CVE-2021-44228', 'CVE-2023-38606').
+    """
+    return _lookup_cve_details(cve_id=cve_id)
+
+
+# ============================================================================
+# SKILL: CLOUD SECURITY & CONTAINER HARDENING
+# ============================================================================
+
+@server.tool()
+@skill_tool(skill="cloud_container")
+def audit_dockerfile(dockerfile_path_or_content: str) -> dict[str, Any]:
+    """Audit Dockerfile against CIS container benchmarks and security best practices.
+
+    Flags root execution, unpinned base images, missing healthchecks, curl|sh pipes,
+    and hardcoded secrets.
+
+    Args:
+        dockerfile_path_or_content: Path to Dockerfile or raw Dockerfile string.
+    """
+    return _audit_dockerfile(dockerfile_path_or_content=dockerfile_path_or_content)
+
+
+@server.tool()
+@skill_tool(skill="cloud_container")
+def audit_iam_policy(policy_json_str: str) -> dict[str, Any]:
+    """Audit Cloud / AWS IAM policy JSON for overly permissive wildcards and escalation risks.
+
+    Args:
+        policy_json_str: IAM policy JSON string or path to policy JSON file.
+    """
+    return _audit_iam_policy(policy_json_str=policy_json_str)
 
 
 def main() -> None:

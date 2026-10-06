@@ -1,84 +1,88 @@
-# Multi-Skill Security & Software Analysis MCP Hub
+# Multi-Skill Cybersecurity MCP Hub
 
-Um servidor MCP (*Model Context Protocol*) modular e extensível para **análise de segurança, engenharia reversa e auditoria de software**, equipado com um **motor de memória persistente local (SQLite)** universal que audita e registra todas as ações de investigação para evitar qualquer perda de contexto pelo agente ou usuário.
+Servidor MCP (*Model Context Protocol*) avançado e modular que consolida **todas as principais áreas da cibersegurança** em um único hub com **29 ferramentas**, equipado com um motor de **memória persistente universal (SQLite)** para evitar perda de contexto durante análises e investigações.
 
 ---
 
-## 🏛️ Arquitetura Multi-Skill
-
-O servidor funciona como um hub central onde cada domínio de segurança é encapsulado como uma **Skill** independente:
+## 🏛️ Catálogo de Habilidades (6 Skills Ativas)
 
 ```
 MCP/
-├── .mcp_memory/                          # Armazenamento SQLite da memória (ignorado no git)
+├── .mcp_memory/                          # Base SQLite da memória (ignorado no git)
 │   └── unified_memory.db
 ├── src/
 │   └── mcp_sec_analyzer/
 │       ├── core/                         # Núcleo da plataforma
-│       │   ├── memory.py                 # Motor SQLite de persistência e auditoria
-│       │   └── decorator.py              # Decorador @skill_tool de rastreamento automático
-│       ├── skills/                       # Catálogo de Habilidades
-│       │   ├── memory_skill.py           # Ferramentas da Skill de Memória
-│       │   └── rea/                      # Skill: Reverse Engineer Anything (REA)
-│       │       ├── session.py            # Sessão de análise binária
-│       │       ├── triage.py             # Visão geral estrutural e mitigações
-│       │       ├── strings_analyzer.py   # Extração inteligente de strings
-│       │       ├── disassembler.py       # Desmontagem rápida via Capstone
-│       │       ├── call_graph.py         # Grafo de chamadas (callers/callees)
-│       │       ├── pseudocode.py         # Decompilador de pseudocódigo C
-│       │       ├── xrefs.py              # Referências cruzadas (XREFs)
-│       │       ├── framework_detector.py # Detecção de runtime/compilador
-│       │       ├── asar.py               # Extração de Electron & source-maps
-│       │       ├── dotnet.py             # Análise de .NET / CLI e #US
-│       │       └── ghidra_bridge.py      # Diagnóstico e ponte para Ghidra
-│       └── server.py                     # Ponto de registro MCP multi-skill
-└── main.py                               # Entrypoint stdio
+│       │   ├── memory.py                 # Motor SQLite de persistência universal
+│       │   └── decorator.py              # Decorador @skill_tool de auditoria automática
+│       ├── skills/                       # Habilidades Especializadas
+│       │   ├── memory_skill.py           # 1. Memória Persistente e Linha do Tempo
+│       │   ├── rea/                      # 2. Engenharia Reversa & Binários (REA)
+│       │   ├── security_audit/           # 3. Auditoria de Código, Segredos e CVEs (FuzzingLabs)
+│       │   ├── osint_recon/              # 4. Reconhecimento Passivo & Superfície (OSINT)
+│       │   ├── threat_intel/             # 5. Inteligência de Ameaças & MITRE ATT&CK
+│       │   └── cloud_container/          # 6. Segurança em Nuvem & Hardening de Containers
+│       └── server.py                     # Hub MCP Central (Registro de 29 ferramentas)
+└── main.py                               # Ponto de entrada stdio
 ```
 
 ---
 
-## 🧠 Skill: Memória Persistente Universal (`memory`)
+### 1. 🧠 Universal Memory (`memory`)
+Persistência e recuperação de contexto entre sessões de investigação:
+- `remember`: Registra achados, notas, hipóteses, credenciais ou IOCs com tags e categorias.
+- `recall`: Busca na base de conhecimento local por palavras-chave, tags, categorias ou skills.
+- `get_timeline`: Histórico cronológico auditável de tudo que foi executado no servidor.
+- `export_investigation_report`: Compila um relatório completo em Markdown.
+- `clear_memory`: Limpa a memória de uma skill ou todo o banco com confirmação.
 
-Tudo que for executado em **qualquer skill** (seja REA ou habilidades futuras) é registrado de forma transparente no banco de dados SQLite local (`.mcp_memory/unified_memory.db`). Além disso, ferramentas dedicadas permitem armazenar notas, hipóteses e recuperar o contexto a qualquer instante:
+### 2. ⚙️ Engenharia Reversa & Binários (`rea`)
+Equivalente completo ao [morluto/rea](https://github.com/morluto/rea):
+- `open_binary`: Carrega executável na memória, mapeia ImageBase, EntryPoint e indexa símbolos.
+- `binary_overview`: Hashes, cálculo de entropia de Shannon (packers/crypto), seções (W^X) e mitigações (ASLR, DEP, CFG).
+- `search_strings`: Busca e categoriza strings ASCII/UTF-16LE (`urls`, `ips`, `registry`, etc.).
+- `list_procedures`: Lista e filtra funções, exportações e importações da sessão ativa.
+- `read_function_instructions`: Desmontagem rápida de instruções (via Capstone Engine) por offset.
+- `get_call_graph`: Reconstrói chamadores (`callers`) e chamadas efetuadas (`callees`).
+- `procedure_pseudo_code`: Gera pseudocódigo estruturado em C com argumentos e fluxo de controle.
+- `find_xrefs_to_name`: Localiza referências cruzadas no código (XREFs) para símbolos e strings.
+- `detect_framework`: Detecta Electron, .NET, Go, Rust, Python PyInstaller, Java ou Nativo.
+- `inspect_electron_asar`: Inspeciona/extrai pacotes `.asar`, localizando source maps (`.map`).
+- `inspect_dotnet`: Inspeciona metadados .NET CLI, User Strings (`#US`) e ofuscadores.
+- `rea_doctor`: Diagnóstico do ambiente e verificação de disassemblers locais e Ghidra.
 
-| Ferramenta | Descrição |
-| :--- | :--- |
-| `remember` | Salva achados, notas, hipóteses, credenciais ou IOCs com título, tags, categoria (`finding`, `note`, `hypothesis`, `ioc`, `todo`) e referência de alvo. |
-| `recall` | Busca na base de conhecimento por palavras-chave, tag, categoria ou skill para recuperar o contexto de investigações anteriores. |
-| `get_timeline` | Retorna o histórico cronológico de todas as ferramentas acionadas com status, parâmetros e tempo de execução. |
-| `export_investigation_report` | Gera um dossiê completo de investigação formatado em Markdown com sumário da sessão, achados e timeline. |
-| `clear_memory` | Limpa a memória de uma skill específica ou todo o banco com confirmação de segurança. |
+### 3. 🔍 Auditoria Defensiva & Higiene de Código (`security_audit`)
+Inspirado nas categorias defensivas do [FuzzingLabs/mcp-security-hub](https://github.com/FuzzingLabs/mcp-security-hub):
+- `scan_secrets`: Varre repositórios em busca de tokens expostos (AWS, GitHub, Slack, PEM, chaves de API) com redação segura (estilo Gitleaks).
+- `audit_dependencies`: Inspeciona manifestos (`requirements.txt`, `package.json`, `pyproject.toml`) consultando a base aberta do **OSV.dev** para apontar CVEs conhecidos (estilo Trivy).
+- `run_sast_scan`: Análise estática de código que detecta injeção de comandos, deserialização insegura, SQL formatado e criptografia obsoleta.
+
+### 4. 🌐 Reconhecimento Passivo & Superfície Exposta (`osint_recon`)
+Avaliação de postura de rede e web:
+- `inspect_http_headers`: Avalia cabeçalhos de proteção (HSTS, CSP, X-Frame-Options, X-Content-Type-Options) e detecta vazamento de banners do servidor (`Server`, `X-Powered-By`).
+- `inspect_tls_certificate`: Inspeciona certificados SSL/TLS, cadeia de emissão, SANs, versões de protocolo (TLS 1.2/1.3) e alerta sobre expiração iminente.
+- `lookup_dns_records`: Consulta endereços IP (v4/v6), registros MX de e-mail e audita as políticas de **SPF** e **DMARC** contra spoofing de domínio via DNS-over-HTTPS.
+
+### 5. 🎯 Inteligência de Ameaças (`threat_intel`)
+Mapeamento e correlação de táticas defensivas:
+- `map_mitre_attack`: Mapeia comportamentos, APIs suspeitas ou palavras-chave para a matriz **MITRE ATT&CK Enterprise**, retornando táticas, IDs de técnica e mitigações defensivas.
+- `analyze_ioc_indicator`: Classifica e valida Indicadores de Comprometimento (IP, hash, URL, domínio, CVE) aplicando *defanging* seguro (`hxxp://`, `domain[.]com`) e sugerindo ações de hunting.
+- `lookup_cve_details`: Consulta detalhes oficiais de vulnerabilidades e pacotes afetados a partir do identificador CVE.
+
+### 6. ☁️ Segurança em Nuvem & Hardening (`cloud_container`)
+Auditoria de postura em infraestrutura moderna:
+- `audit_dockerfile`: Inspeciona Dockerfiles contra os benchmarks de segurança **CIS Docker** (execução como root, imagens base não fixadas, pipes `curl|sh`, ausência de healthcheck).
+- `audit_iam_policy`: Audita políticas de identidade e acesso (IAM) em busca de permissões excessivas coringadas (`*` em `*`), acessos administrativos irrestritos e riscos de escalonamento de privilégios.
 
 ---
 
-## ⚙️ Skill: Engenharia Reversa (`rea`)
+## 🧭 Metadados e Auto-Orientação de IA
 
-Reproduz 1:1 o conjunto de ferramentas do [morluto/rea](https://github.com/morluto/rea):
-
-| Ferramenta | Descrição |
-| :--- | :--- |
-| `open_binary` | Carrega o executável na sessão, mapeia arquitetura, ImageBase, EntryPoint e indexa símbolos. |
-| `binary_overview` | Hashes, cálculo de entropia de Shannon (detecção de packers/criptografia), seções com anomalias (W^X), importações críticas e mitigações (ASLR, DEP, CFG). |
-| `search_strings` | Busca strings (ASCII e UTF-16LE) categorizadas em inteligência (`urls`, `ipv4`, `windows_paths`, `registry_keys`, `crypto_pem`, etc.). |
-| `list_procedures` | Lista e filtra rotinas, exportações e importações da sessão ativa. |
-| `read_function_instructions` | Desmontagem rápida de instruções (via Capstone Engine) paginada por offset. |
-| `get_call_graph` | Reconstrói quem chama a função (`callers`) e quais funções ela invoca (`callees`). |
-| `procedure_pseudo_code` | Gera pseudocódigo estruturado em estilo C com convenções de chamada e fluxo de controle. |
-| `find_xrefs_to_name` | Encontra referências cruzadas no código (XREFs) para funções, strings literais ou endereços. |
-| `detect_framework` | Detecta Electron, .NET C#, Go, Rust, Python PyInstaller, Java JVM ou Nativo C/C++. |
-| `inspect_electron_asar` | Inspeciona e extrai arquivos `.asar` do Electron, localizando `package.json` e *source maps* (`.map`). |
-| `inspect_dotnet` | Inspeciona montagens .NET, extrai a tabela `#US` (User Strings) e detecta ofuscadores. |
-| `rea_doctor` | Executa diagnóstico do ambiente local (Capstone, formatos suportados e detecção do Ghidra Headless). |
+- `list_skills`: Permite que qualquer agente de IA explore em tempo de execução o catálogo completo de habilidades ativas e ferramentas disponíveis no servidor.
 
 ---
 
-## 🧭 Meta-Ferramenta
-
-- `list_skills`: Retorna o catálogo das habilidades ativas e ferramentas disponíveis no servidor MCP para os agentes de IA se auto-orientarem.
-
----
-
-## 🚀 Como Executar e Configurar
+## 🚀 Como Executar
 
 ```bash
 uv run python main.py
