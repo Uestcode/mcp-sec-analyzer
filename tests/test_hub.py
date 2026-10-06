@@ -64,15 +64,43 @@ async def main():
     sec_data = json.loads(sec_res.content[0].text)
     print(f"  - Secrets scanned: {sec_data.get('files_scanned')} files | Findings: {sec_data.get('secrets_detected')}")
 
-    # 6. Universal Persistent Memory Timeline
-    print("\n[6] Universal Persistent Memory (Timeline Audit):")
+    # 6. AppSec (OWASP Top 10 & API Security)
+    print("\n[6] Testing Application Security (Bri Russell Skills):")
+    owasp_res = await server.call_tool("audit_owasp_top10", {"target_path": "src", "max_findings": 5})
+    owasp_data = json.loads(owasp_res.content[0].text)
+    print(f"  - OWASP Top 10: {owasp_data.get('files_scanned')} files scanned | {owasp_data.get('violations_found')} violations")
+
+    api_res = await server.call_tool("audit_api_security", {"target_path": "src", "max_findings": 5})
+    api_data = json.loads(api_res.content[0].text)
+    print(f"  - API Security: {api_data.get('files_scanned')} files scanned | {api_data.get('violations_found')} risks")
+
+    # 7. Incident Response (NIST Triage & Communications)
+    print("\n[7] Testing Digital Forensics & Incident Response:")
+    ir_res = await server.call_tool("triage_security_incident", {
+        "incident_description": "Suspected unauthorized persistence via scheduled task and credential access on DC01.",
+        "affected_assets": ["DC01.corp.internal", "SRV-WEB-02"],
+        "observed_iocs": ["198.51.100.23", "mimikatz.exe"],
+    })
+    ir_data = json.loads(ir_res.content[0].text)
+    print(f"  - IR Triage: Severity={ir_data.get('severity')} | Containment actions={len(ir_data.get('immediate_containment_playbook', []))}")
+
+    comm_res = await server.call_tool("generate_incident_comms", {
+        "incident_id": "INC-2026-0089",
+        "incident_summary": "Credential access attempt isolated on DC01 without data leakage.",
+        "audience": "executive",
+    })
+    comm_data = json.loads(comm_res.content[0].text)
+    print(f"  - Incident Advisory ({comm_data.get('audience')}): rendered {len(comm_data.get('rendered_communication', '').splitlines())} lines")
+
+    # 8. Universal Persistent Memory Timeline
+    print("\n[8] Universal Persistent Memory (Timeline Audit):")
     tl_res = await server.call_tool("get_timeline", {"limit": 6})
     for block in tl_res.content:
         item = json.loads(block.text)
         print(f"  [{item['skill']}] {item['tool_name']}: {item['summary']}")
 
     print("\n==================================================")
-    print("ALL 6 CYBERSECURITY SKILLS VERIFIED & FUNCTIONAL!")
+    print("ALL 8 CYBERSECURITY SKILLS VERIFIED & FUNCTIONAL!")
     print("==================================================")
 
 

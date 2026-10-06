@@ -42,12 +42,21 @@ from .skills.cloud_container.hardening import (
     audit_dockerfile as _audit_dockerfile,
     audit_iam_policy as _audit_iam_policy,
 )
+from .skills.appsec.owasp import (
+    audit_owasp_top10 as _audit_owasp_top10,
+    audit_api_security as _audit_api_security,
+)
+from .skills.appsec.llm_sec import audit_prompt_injection as _audit_prompt_injection
+from .skills.incident_response.triage import (
+    triage_security_incident as _triage_security_incident,
+    generate_incident_comms as _generate_incident_comms,
+)
 
 # Initialize MCP Server instance
 server = MCPServer(
     name="mcp-sec-analyzer",
-    version="2.0.0",
-    description="Multi-Skill Cybersecurity Hub: Reverse Engineering, Auditing, OSINT, Threat Intel, and Cloud Hardening",
+    version="3.0.0",
+    description="Unified Cybersecurity Hub: REA, AppSec, OWASP, Cloud Hardening, Threat Intel, and Incident Response",
 )
 
 # ============================================================================
@@ -58,8 +67,8 @@ server = MCPServer(
 def list_skills() -> dict[str, Any]:
     """List available skills, active capabilities, and architecture modules in this MCP server."""
     return {
-        "platform": "Multi-Skill Security Hub",
-        "total_active_skills": 6,
+        "platform": "Unified Cybersecurity MCP Hub",
+        "total_active_skills": 8,
         "active_skills": [
             {
                 "id": "memory",
@@ -88,6 +97,13 @@ def list_skills() -> dict[str, Any]:
                 "tools": ["scan_secrets", "audit_dependencies", "run_sast_scan"],
             },
             {
+                "id": "appsec",
+                "name": "Application Security & OWASP / LLM Audit (Bri Russell Skills)",
+                "status": "active",
+                "description": "OWASP Top 10 code assessment, REST/GraphQL API security review, and LLM prompt injection safeguards.",
+                "tools": ["audit_owasp_top10", "audit_api_security", "audit_prompt_injection"],
+            },
+            {
                 "id": "osint_recon",
                 "name": "Passive Reconnaissance & Surface Posture (OSINT)",
                 "status": "active",
@@ -107,6 +123,13 @@ def list_skills() -> dict[str, Any]:
                 "status": "active",
                 "description": "Dockerfile CIS benchmark auditing and Cloud/AWS IAM policy least-privilege analysis.",
                 "tools": ["audit_dockerfile", "audit_iam_policy"],
+            },
+            {
+                "id": "incident_response",
+                "name": "Digital Forensics & Incident Response (DFIR / NIST SP 800-61r2)",
+                "status": "active",
+                "description": "Rapid triage of security events, containment planning, evidence preservation, and audience communication.",
+                "tools": ["triage_security_incident", "generate_incident_comms"],
             },
         ],
         "extensibility": "Modular architecture allows adding new security domains in skills/ effortlessly.",
@@ -502,6 +525,108 @@ def audit_iam_policy(policy_json_str: str) -> dict[str, Any]:
         policy_json_str: IAM policy JSON string or path to policy JSON file.
     """
     return _audit_iam_policy(policy_json_str=policy_json_str)
+
+
+# ============================================================================
+# SKILL: APPLICATION SECURITY & OWASP / LLM AUDIT (Bri Russell Skills)
+# ============================================================================
+
+@server.tool()
+@skill_tool(skill="appsec")
+def audit_owasp_top10(target_path: str, max_findings: int = 100) -> dict[str, Any]:
+    """Audit codebase against OWASP Top 10 (2021) web application security risks.
+
+    Detects broken access control, cryptographic failures, injection, security misconfigurations,
+    and server-side request forgery (SSRF).
+
+    Args:
+        target_path: Path to source code directory or file to audit.
+        max_findings: Maximum issues to return (default: 100).
+    """
+    return _audit_owasp_top10(target_path=target_path, max_findings=max_findings)
+
+
+@server.tool()
+@skill_tool(skill="appsec")
+def audit_api_security(target_path: str, max_findings: int = 100) -> dict[str, Any]:
+    """Audit API route handlers and endpoints against OWASP API Security Top 10.
+
+    Detects BOLA/IDOR patterns, mass assignment risk, and permissive wildcard CORS.
+
+    Args:
+        target_path: Path to API source directory or router file.
+        max_findings: Maximum issues to return (default: 100).
+    """
+    return _audit_api_security(target_path=target_path, max_findings=max_findings)
+
+
+@server.tool()
+@skill_tool(skill="appsec")
+def audit_prompt_injection(target_path: str, max_findings: int = 50) -> dict[str, Any]:
+    """Audit AI and LLM application codebase against prompt injection and output execution risks.
+
+    Checks OWASP Top 10 for LLMs: prompt concatenation, unvalidated execution sinks, and SQL generation.
+
+    Args:
+        target_path: Path to AI application directory or source file.
+        max_findings: Maximum issues to return (default: 50).
+    """
+    return _audit_prompt_injection(target_path=target_path, max_findings=max_findings)
+
+
+# ============================================================================
+# SKILL: DIGITAL FORENSICS & INCIDENT RESPONSE (DFIR / NIST SP 800-61r2)
+# ============================================================================
+
+@server.tool()
+@skill_tool(skill="incident_response")
+def triage_security_incident(
+    incident_description: str,
+    affected_assets: list[str] | str,
+    observed_iocs: list[str] | str | None = None,
+    data_exfiltration_suspected: bool = False,
+) -> dict[str, Any]:
+    """Execute structured incident triage, severity classification, and containment planning.
+
+    Adheres to NIST SP 800-61r2 framework, producing severity score (P1-P4), immediate containment actions,
+    and evidence preservation checklists.
+
+    Args:
+        incident_description: Summary of observed anomalous activity or breach.
+        affected_assets: Hostnames, IP addresses, or services impacted.
+        observed_iocs: List of suspected indicators of compromise (hashes, IPs, domains).
+        data_exfiltration_suspected: Flag if sensitive data exfiltration is suspected.
+    """
+    return _triage_security_incident(
+        incident_description=incident_description,
+        affected_assets=affected_assets,
+        observed_iocs=observed_iocs,
+        data_exfiltration_suspected=data_exfiltration_suspected,
+    )
+
+
+@server.tool()
+@skill_tool(skill="incident_response")
+def generate_incident_comms(
+    incident_id: str,
+    incident_summary: str,
+    current_status: str = "Contained",
+    audience: str = "technical",
+) -> dict[str, Any]:
+    """Generate professional security incident communications tailored by audience (Executive, Technical, Customer).
+
+    Args:
+        incident_id: Tracking ID for the incident (e.g., 'INC-2026-0042').
+        incident_summary: Executive or technical summary of the event.
+        current_status: Current incident lifecycle status (e.g. 'Investigating', 'Contained', 'Resolved').
+        audience: Target audience: 'executive', 'technical', or 'customer'.
+    """
+    return _generate_incident_comms(
+        incident_id=incident_id,
+        incident_summary=incident_summary,
+        current_status=current_status,
+        audience=audience,
+    )
 
 
 def main() -> None:

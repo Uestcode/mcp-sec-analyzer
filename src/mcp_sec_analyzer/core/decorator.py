@@ -125,6 +125,20 @@ def _default_summarizer(skill: str, tool_name: str, args: dict[str, Any], result
     if tool_name == "audit_iam_policy":
         return f"IAM policy audit: {result.get('risks_identified', 0)} privilege risks identified"
 
+    # AppSec & OWASP summarizers
+    if tool_name == "audit_owasp_top10":
+        return f"OWASP Top 10: {result.get('violations_found', 0)} violations found in {result.get('files_scanned', 0)} files"
+    if tool_name == "audit_api_security":
+        return f"API Security: {result.get('violations_found', 0)} API risks found in {result.get('files_scanned', 0)} files"
+    if tool_name == "audit_prompt_injection":
+        return f"Prompt Injection audit: {result.get('violations_found', 0)} risks found in {result.get('files_scanned', 0)} files"
+
+    # Incident Response summarizers
+    if tool_name == "triage_security_incident":
+        return f"Incident Triage: classified as {result.get('severity')} ({result.get('affected_assets_count', 0)} assets)"
+    if tool_name == "generate_incident_comms":
+        return f"Incident Comms: rendered advisory for audience '{result.get('audience')}'"
+
     # Memory specific summarizers
     if tool_name == "remember":
         return f"Saved [{result.get('category', 'note').upper()}]: '{result.get('title')}' (tags: {result.get('tags')})"
