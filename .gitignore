@@ -8,3 +8,7 @@ wheels/
 
 # Virtual environments
 .venv
+
+# Investigation runtime memory database
+.mcp_memory/
+*.db

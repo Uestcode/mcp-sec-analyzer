@@ -1,44 +1,90 @@
-# MCP Security & Binary Reverse Engineering Suite (REA Equivalent)
+# Multi-Skill Security & Software Analysis MCP Hub
 
-Servidor MCP (*Model Context Protocol*) completo para **engenharia reversa, análise estática de binários e triagem de software**, reproduzindo a suíte de ferramentas do [morluto/rea](https://github.com/morluto/rea) com execução local e sem dependência de nuvem.
-
----
-
-## 🛠️ Matriz de Ferramentas MCP (Equivalência REA)
-
-| Ferramenta MCP | Equivalente REA | Finalidade |
-| :--- | :--- | :--- |
-| `open_binary` | `open_binary` | Carrega o binário na sessão ativa, descobre arquitetura, image base, entry point e indexa símbolos. |
-| `binary_overview` | `binary_overview` | Resumo estrutural: hashes, cálculo de entropia de Shannon (packers/crypto), seções, anomalias (W^X), importações críticas e mitigações (ASLR, DEP/NX, CFG, Authenticode). |
-| `search_strings` | `search_strings` | Busca strings (ASCII e UTF-16LE) categorizadas em inteligência (`urls`, `ipv4`, `windows_paths`, `posix_paths`, `registry_keys`, `crypto_pem`, `suspicious_commands`). |
-| `list_procedures` | `list_procedures` | Lista e filtra rotinas, pontos de entrada, funções exportadas e importadas com seus endereços virtuais. |
-| `read_function_instructions` | `read_function_instructions` | Desmontagem rápida de instruções (via Capstone Engine) com paginação por offset sem o overhead de descompiladores pesados. |
-| `get_call_graph` | `get_call_graph` | Reconstrói o grafo de chamadas: funções que chamam (`callers`) e funções chamadas (`callees`). |
-| `procedure_pseudo_code` | `procedure_pseudo_code` | Gera pseudocódigo estruturado em estilo C com identificação de argumentos, chamadas e desvios condicionais. |
-| `find_xrefs_to_name` | `find_xrefs_to_name` | Encontra referências cruzadas no código (XREFs) para uma função, string literal ou endereço. |
-| `detect_framework` | `triage` / `detect` | Identifica o runtime da aplicação: Electron ASAR, .NET/CLR (C#), Go (Golang), Rust, Python PyInstaller, Java JVM ou Nativo C/C++. |
-| `inspect_electron_asar` | `asar extract` / `maps` | Inspeciona e extrai pacotes `.asar` do Electron, descobrindo source-maps (`.map`) e `package.json`. |
-| `inspect_dotnet` | `dotnet triage` | Inspeciona metadados CLI de montagens .NET, fluxos `#US` (User Strings) e detectores de ofuscadores (ConfuserEx, etc.). |
-| `rea_doctor` | `rea doctor` | Diagnóstico de ambiente e integridade dos motores locais (Capstone, formatos suportados e Ghidra Headless). |
+Um servidor MCP (*Model Context Protocol*) modular e extensível para **análise de segurança, engenharia reversa e auditoria de software**, equipado com um **motor de memória persistente local (SQLite)** universal que audita e registra todas as ações de investigação para evitar qualquer perda de contexto pelo agente ou usuário.
 
 ---
 
-## 🚀 Como Executar
+## 🏛️ Arquitetura Multi-Skill
 
-### Pré-requisitos
-- Python 3.11+
-- [uv](https://docs.astral.sh/uv/)
+O servidor funciona como um hub central onde cada domínio de segurança é encapsulado como uma **Skill** independente:
 
-### Inicializar Servidor MCP
-```bash
-uv run python main.py
+```
+MCP/
+├── .mcp_memory/                          # Armazenamento SQLite da memória (ignorado no git)
+│   └── unified_memory.db
+├── src/
+│   └── mcp_sec_analyzer/
+│       ├── core/                         # Núcleo da plataforma
+│       │   ├── memory.py                 # Motor SQLite de persistência e auditoria
+│       │   └── decorator.py              # Decorador @skill_tool de rastreamento automático
+│       ├── skills/                       # Catálogo de Habilidades
+│       │   ├── memory_skill.py           # Ferramentas da Skill de Memória
+│       │   └── rea/                      # Skill: Reverse Engineer Anything (REA)
+│       │       ├── session.py            # Sessão de análise binária
+│       │       ├── triage.py             # Visão geral estrutural e mitigações
+│       │       ├── strings_analyzer.py   # Extração inteligente de strings
+│       │       ├── disassembler.py       # Desmontagem rápida via Capstone
+│       │       ├── call_graph.py         # Grafo de chamadas (callers/callees)
+│       │       ├── pseudocode.py         # Decompilador de pseudocódigo C
+│       │       ├── xrefs.py              # Referências cruzadas (XREFs)
+│       │       ├── framework_detector.py # Detecção de runtime/compilador
+│       │       ├── asar.py               # Extração de Electron & source-maps
+│       │       ├── dotnet.py             # Análise de .NET / CLI e #US
+│       │       └── ghidra_bridge.py      # Diagnóstico e ponte para Ghidra
+│       └── server.py                     # Ponto de registro MCP multi-skill
+└── main.py                               # Entrypoint stdio
 ```
 
 ---
 
-## ⚙️ Configuração no Cliente MCP (Claude Desktop, Cursor, Antigravity)
+## 🧠 Skill: Memória Persistente Universal (`memory`)
 
-Adicione ao seu arquivo de configuração MCP (`mcp_config.json` ou `claude_desktop_config.json`):
+Tudo que for executado em **qualquer skill** (seja REA ou habilidades futuras) é registrado de forma transparente no banco de dados SQLite local (`.mcp_memory/unified_memory.db`). Além disso, ferramentas dedicadas permitem armazenar notas, hipóteses e recuperar o contexto a qualquer instante:
+
+| Ferramenta | Descrição |
+| :--- | :--- |
+| `remember` | Salva achados, notas, hipóteses, credenciais ou IOCs com título, tags, categoria (`finding`, `note`, `hypothesis`, `ioc`, `todo`) e referência de alvo. |
+| `recall` | Busca na base de conhecimento por palavras-chave, tag, categoria ou skill para recuperar o contexto de investigações anteriores. |
+| `get_timeline` | Retorna o histórico cronológico de todas as ferramentas acionadas com status, parâmetros e tempo de execução. |
+| `export_investigation_report` | Gera um dossiê completo de investigação formatado em Markdown com sumário da sessão, achados e timeline. |
+| `clear_memory` | Limpa a memória de uma skill específica ou todo o banco com confirmação de segurança. |
+
+---
+
+## ⚙️ Skill: Engenharia Reversa (`rea`)
+
+Reproduz 1:1 o conjunto de ferramentas do [morluto/rea](https://github.com/morluto/rea):
+
+| Ferramenta | Descrição |
+| :--- | :--- |
+| `open_binary` | Carrega o executável na sessão, mapeia arquitetura, ImageBase, EntryPoint e indexa símbolos. |
+| `binary_overview` | Hashes, cálculo de entropia de Shannon (detecção de packers/criptografia), seções com anomalias (W^X), importações críticas e mitigações (ASLR, DEP, CFG). |
+| `search_strings` | Busca strings (ASCII e UTF-16LE) categorizadas em inteligência (`urls`, `ipv4`, `windows_paths`, `registry_keys`, `crypto_pem`, etc.). |
+| `list_procedures` | Lista e filtra rotinas, exportações e importações da sessão ativa. |
+| `read_function_instructions` | Desmontagem rápida de instruções (via Capstone Engine) paginada por offset. |
+| `get_call_graph` | Reconstrói quem chama a função (`callers`) e quais funções ela invoca (`callees`). |
+| `procedure_pseudo_code` | Gera pseudocódigo estruturado em estilo C com convenções de chamada e fluxo de controle. |
+| `find_xrefs_to_name` | Encontra referências cruzadas no código (XREFs) para funções, strings literais ou endereços. |
+| `detect_framework` | Detecta Electron, .NET C#, Go, Rust, Python PyInstaller, Java JVM ou Nativo C/C++. |
+| `inspect_electron_asar` | Inspeciona e extrai arquivos `.asar` do Electron, localizando `package.json` e *source maps* (`.map`). |
+| `inspect_dotnet` | Inspeciona montagens .NET, extrai a tabela `#US` (User Strings) e detecta ofuscadores. |
+| `rea_doctor` | Executa diagnóstico do ambiente local (Capstone, formatos suportados e detecção do Ghidra Headless). |
+
+---
+
+## 🧭 Meta-Ferramenta
+
+- `list_skills`: Retorna o catálogo das habilidades ativas e ferramentas disponíveis no servidor MCP para os agentes de IA se auto-orientarem.
+
+---
+
+## 🚀 Como Executar e Configurar
+
+```bash
+uv run python main.py
+```
+
+### Configuração no Cliente MCP (Antigravity IDE, Claude Desktop, Cursor)
 
 ```json
 {
@@ -56,17 +102,3 @@ Adicione ao seu arquivo de configuração MCP (`mcp_config.json` ou `claude_desk
   }
 }
 ```
-
----
-
-## 🔄 Fluxo de Investigação Típico (Workflow REA)
-
-1. **Abrir o Binário:** `open_binary("caminho/do/app.exe")`
-2. **Obter Visão Geral:** `binary_overview()`
-3. **Buscar Pistas & Strings:** `search_strings(category="urls")` ou `search_strings(query="auth")`
-4. **Localizar Funções Chave:** `list_procedures(filter_name="Login")`
-5. **Rastrear Referências:** `find_xrefs_to_name("https://api.exemplo.com")`
-6. **Inspecionar Instruções (Fast-Path):** `read_function_instructions(procedure_or_address="entry_point", limit=20)`
-7. **Reconstruir Fluxo de Controle:** `get_call_graph(procedure_or_address="entry_point")`
-8. **Gerar Pseudocódigo:** `procedure_pseudo_code(procedure_or_address="entry_point")`
-9. **Se for Electron / .NET:** Utilizar `inspect_electron_asar` ou `inspect_dotnet` para extração direta de código-fonte.

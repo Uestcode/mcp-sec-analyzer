@@ -49,6 +49,16 @@ class AnalysisSession:
             self.image_base = 0x10000000
             self.entry_point_va = self.image_base
 
+        # Register session in persistent memory
+        from ...core.memory import unified_memory
+        from .triage import calculate_hashes
+        hashes = calculate_hashes(self.file_path)
+        unified_memory.get_or_create_session(
+            skill="rea",
+            target=str(self.file_path),
+            target_metadata={"sha256": hashes.get("sha256"), "arch": self.arch, "format": self.format},
+        )
+
         return {
             "file_name": self.file_path.name,
             "file_path": str(self.file_path),
