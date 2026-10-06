@@ -94,6 +94,14 @@ def _default_summarizer(skill: str, tool_name: str, args: dict[str, Any], result
     if tool_name == "rea_doctor":
         return f"Doctor: status={result.get('status')}"
 
+    # Security Audit summarizers
+    if tool_name == "scan_secrets":
+        return f"Secrets scan: found {result.get('secrets_detected', 0)} secrets in {result.get('files_scanned', 0)} files"
+    if tool_name == "audit_dependencies":
+        return f"Dependency audit: checked {result.get('packages_checked', 0)} packages, {result.get('vulnerable_packages_found', 0)} vulnerable"
+    if tool_name == "run_sast_scan":
+        return f"SAST scan: found {result.get('sast_issues_detected', 0)} issues in {result.get('source_files_scanned', 0)} files"
+
     # Memory specific summarizers
     if tool_name == "remember":
         return f"Saved [{result.get('category', 'note').upper()}]: '{result.get('title')}' (tags: {result.get('tags')})"

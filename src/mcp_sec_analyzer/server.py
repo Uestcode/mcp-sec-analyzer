@@ -25,11 +25,14 @@ from .skills.rea.session import active_session
 from .skills.rea.strings_analyzer import analyze_strings as _analyze_strings
 from .skills.rea.triage import triage_file as _triage_file
 from .skills.rea.xrefs import find_xrefs_to_name as _find_xrefs_to_name
+from .skills.security_audit.dependencies import audit_dependencies as _audit_dependencies
+from .skills.security_audit.sast import run_sast_scan as _run_sast_scan
+from .skills.security_audit.secrets import scan_secrets as _scan_secrets
 
 # Initialize MCP Server instance
 server = MCPServer(
     name="mcp-sec-analyzer",
-    version="1.1.0",
+    version="1.2.0",
     description="Multi-Skill Security, Reverse Engineering, and Auditing Platform with Universal Persistent Memory",
 )
 
@@ -62,8 +65,15 @@ def list_skills() -> dict[str, Any]:
                     "inspect_dotnet", "rea_doctor",
                 ],
             },
+            {
+                "id": "security_audit",
+                "name": "Defensive Security Audit & Hygiene (FuzzingLabs / Gitleaks / Trivy SAST)",
+                "status": "active",
+                "description": "Secret leakage detection, supply chain / CVE dependency audit via OSV.dev, and SAST code rules.",
+                "tools": ["scan_secrets", "audit_dependencies", "run_sast_scan"],
+            },
         ],
-        "extensibility": "New skills (e.g. code audit, threat hunting) can be dropped into the skills directory.",
+        "extensibility": "New skills can be dropped into the skills directory and registered seamlessly.",
     }
 
 
@@ -296,6 +306,54 @@ def rea_doctor() -> dict[str, Any]:
         "supported_formats": ["PE (Windows EXE/DLL)", "ELF (Linux)", "Mach-O (macOS)", "Electron ASAR", ".NET CLI"],
         "ghidra_headless": ghidra_info,
     }
+
+
+# ============================================================================
+# SKILL: DEFENSIVE SECURITY AUDIT & HYGIENE (FuzzingLabs / Gitleaks / Trivy SAST)
+# ============================================================================
+
+@server.tool()
+@skill_tool(skill="security_audit")
+def scan_secrets(target_path: str, max_findings: int = 100) -> dict[str, Any]:
+    """Scan files or directories for leaked API keys, tokens, and hardcoded secrets (Gitleaks equivalent).
+
+    Detects AWS keys, GitHub tokens, Google API keys, Slack/Discord webhooks, private keys,
+    and high-entropy hardcoded credentials with safe redaction.
+
+    Args:
+        target_path: Path to file or folder to audit for credential leakage.
+        max_findings: Maximum findings to return (default: 100).
+    """
+    return _scan_secrets(target_path=target_path, max_findings=max_findings)
+
+
+@server.tool()
+@skill_tool(skill="security_audit")
+def audit_dependencies(target_path: str) -> dict[str, Any]:
+    """Audit project dependencies for known vulnerabilities and CVEs via OSV.dev (Trivy equivalent).
+
+    Inspects requirements.txt, package.json, and pyproject.toml against the open-source
+    vulnerability database (OSV) to identify vulnerable components and CVE advisories.
+
+    Args:
+        target_path: Path to directory or manifest file to audit.
+    """
+    return _audit_dependencies(target_path=target_path)
+
+
+@server.tool()
+@skill_tool(skill="security_audit")
+def run_sast_scan(target_path: str, max_findings: int = 100) -> dict[str, Any]:
+    """Run static application security testing (SAST) for insecure coding patterns.
+
+    Detects command injection, insecure deserialization (Pickle/YAML), dynamic eval/exec,
+    SQL string concatenation, weak crypto, and DOM XSS sinks.
+
+    Args:
+        target_path: Path to source file or repository directory to analyze.
+        max_findings: Maximum issues to return (default: 100).
+    """
+    return _run_sast_scan(target_path=target_path, max_findings=max_findings)
 
 
 def main() -> None:
