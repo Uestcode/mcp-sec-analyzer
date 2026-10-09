@@ -24,20 +24,44 @@ SECURITY_HEADERS = {
 INFO_LEAK_HEADERS = ["server", "x-powered-by", "x-aspnet-version", "x-runtime"]
 
 
-def inspect_http_headers(target_url: str) -> dict[str, Any]:
-    """Inspect HTTP security headers and identify missing browser protections or info leaks."""
+def inspect_http_headers(
+    target_url: str,
+    use_tor: bool = False,
+    proxy: str | None = None,
+) -> dict[str, Any]:
+    """Inspect HTTP security headers and identify missing browser protections or info leaks.
+    Supports Stealth Mode via Tor / Onion SOCKS5 proxy to conceal investigator IP address.
+    """
     if not target_url.startswith(("http://", "https://")):
         target_url = "https://" + target_url
 
+    from mcp_sec_analyzer.core.stealth import get_active_proxy
+    active_proxy = get_active_proxy(force_tor=use_tor, custom_proxy=proxy)
+
     try:
-        req = urllib.request.Request(
-            target_url,
-            headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) mcp-sec-recon/1.0"},
-            method="GET",
-        )
-        with urllib.request.urlopen(req, timeout=8.0) as resp:
+        if active_proxy:
+            import requests
+            import urllib3
+            urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+            proxies = {"http": active_proxy, "https": active_proxy}
+            resp = requests.get(
+                target_url,
+                proxies=proxies,
+                headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) mcp-sec-recon/1.0"},
+                timeout=12.0,
+                verify=False,
+            )
             headers = {k.lower(): v for k, v in resp.headers.items()}
-            status_code = resp.status
+            status_code = resp.status_code
+        else:
+            req = urllib.request.Request(
+                target_url,
+                headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) mcp-sec-recon/1.0"},
+                method="GET",
+            )
+            with urllib.request.urlopen(req, timeout=8.0) as resp:
+                headers = {k.lower(): v for k, v in resp.headers.items()}
+                status_code = resp.status
     except Exception as e:
         return {"error": f"Failed to connect to {target_url}: {e}"}
 
@@ -58,6 +82,8 @@ def inspect_http_headers(target_url: str) -> dict[str, Any]:
         "url": target_url,
         "status_code": status_code,
         "security_score_percentage": score,
+        "stealth_mode": bool(active_proxy),
+        "proxy_gateway": active_proxy,
         "present_security_headers": present_security_headers,
         "missing_security_headers": missing_security_headers,
         "information_disclosure_headers": info_disclosures,

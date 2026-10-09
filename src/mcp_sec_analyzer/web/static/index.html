@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Unified Cybersecurity MCP Hub | Interactive SOC Workbench</title>
+  <meta name="description" content="Plataforma interativa para execução e monitoramento de 36 ferramentas do servidor Unified Cybersecurity MCP: Maigret OSINT, REA Engenharia Reversa, SAST, OWASP, Cloud Hardening e DFIR.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css?v=4.2">
+</head>
+<body class="cyber-theme">
+  <!-- Cyber Background Ambient Glows -->
+  <div class="ambient-glow glow-red" aria-hidden="true"></div>
+  <div class="ambient-glow glow-carbon" aria-hidden="true"></div>
+
+  <!-- Main App Shell -->
+  <div class="app-layout">
+    <!-- Top Navigation Header -->
+    <header class="top-nav" role="banner">
+      <div class="nav-brand">
+        <div class="brand-logo-hex">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="logo-icon">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            <path d="M12 8v4"/>
+            <path d="M12 16h.01"/>
+          </svg>
+        </div>
+        <div class="brand-titles">
+          <h1 class="brand-title">CYBERSHIELD <span class="neon-text">MCP HUB</span></h1>
+          <span class="brand-subtitle">Console Executável de Cibersegurança & OSINT</span>
+        </div>
+      </div>
+
+      <!-- Quick Metrics & Status -->
+      <div class="nav-center-stats">
+        <div class="status-indicator-pill" id="server-status-pill">
+          <span class="pulse-dot"></span>
+          <span id="server-status-text">Conectando ao Hub...</span>
+        </div>
+        <div class="stat-chip" id="stat-tools-count">
+          <span class="stat-number">36</span>
+          <span class="stat-label">Ferramentas</span>
+        </div>
+        <div class="stat-chip" id="stat-skills-count">
+          <span class="stat-number">8</span>
+          <span class="stat-label">Habilidades</span>
+        </div>
+        <div class="stat-chip highlight-chip" id="stat-maigret-badge" title="Maigret OSINT v0.6.6 Integrado">
+          <span class="chip-icon">🔎</span>
+          <span class="chip-text">Maigret OSINT 8077+ Sites</span>
+        </div>
+      </div>
+
+      <!-- Header Navigation Tabs -->
+      <nav class="nav-views" aria-label="Navegação Principal">
+        <button class="nav-tab-btn active" id="tab-btn-workbench" data-view="workbench">
+          <span class="btn-icon">⚡</span> Workbench SOC
+        </button>
+        <button class="nav-tab-btn" id="tab-btn-timeline" data-view="timeline">
+          <span class="btn-icon">📜</span> Linha do Tempo
+        </button>
+        <button class="nav-tab-btn" id="tab-btn-dossier" data-view="dossier">
+          <span class="btn-icon">📋</span> Dossiê Markdown
+        </button>
+      </nav>
+
+      <!-- Stealth Mode & Onion Node Pill -->
+      <div class="nav-stealth-wrapper">
+        <button type="button" class="stealth-pill-btn" id="btn-stealth-modal" title="Configurar Camuflagem de Tráfego / Nó Onion (Tor)">
+          <span class="stealth-icon-wrapper"><span class="stealth-icon">🧅</span></span>
+          <span class="stealth-label">Modo Stealth</span>
+          <span class="stealth-badge-status off" id="stealth-status-badge">OFF</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="main-workspace" id="main-content">
+      <!-- VIEW 1: WORKBENCH SOC (Default Interactive Execution) -->
+      <section class="view-panel active-panel" id="view-workbench" aria-label="Painel de Ferramentas">
+        <!-- Sidebar: Skill Filters & Tool Explorer -->
+        <aside class="tools-sidebar" id="tools-sidebar">
+          <!-- Sidebar Header & Toggle -->
+          <div class="sidebar-top-bar" id="sidebar-top-bar">
+            <div class="sidebar-title-info">
+              <span class="sidebar-title-icon">📂</span>
+              <span class="sidebar-title-heading">Catálogo de Ferramentas</span>
+              <span class="sidebar-badge-count" id="sidebar-badge-count">36</span>
+            </div>
+            <button type="button" class="btn-sidebar-toggle" id="btn-sidebar-toggle" title="Recolher / Expandir Menu Lateral" aria-label="Recolher ou Expandir Menu">
+              <span class="sidebar-toggle-arrow" id="sidebar-toggle-arrow">◀</span>
+            </button>
+          </div>
+
+          <div class="sidebar-search-box">
+            <div class="search-input-wrapper">
+              <span class="search-icon">🔍</span>
+              <input type="search" id="tool-search-input" placeholder="Buscar ferramenta ou parâmetro (Ctrl+K)..." autocomplete="off" spellcheck="false">
+              <kbd class="search-shortcut">Ctrl K</kbd>
+            </div>
+          </div>
+
+          <!-- Skill Filter Pills Bar -->
+          <div class="skill-filter-pills" id="skill-filters-container" role="tablist" aria-label="Filtro de Habilidades">
+            <!-- Rendered dynamically by JavaScript -->
+          </div>
+
+          <!-- Tools List Scrollable Container -->
+          <div class="tools-list-container" id="tools-list-container" role="listbox" aria-label="Lista de Ferramentas">
+            <!-- Dynamic tools cards populated here -->
+            <div class="loading-placeholder">Carregando catálogo de ferramentas do MCP...</div>
+          </div>
+        </aside>
+
+        <!-- Center: Interactive Execution Console -->
+        <section class="execution-workbench" id="execution-workbench">
+          <div class="workbench-card">
+            <!-- Active Tool Header -->
+            <div class="tool-meta-header" id="active-tool-header">
+              <div class="tool-breadcrumb-bar">
+                <button type="button" class="btn-expand-sidebar-pill" id="btn-expand-sidebar-pill" title="Expandir catálogo de ferramentas">
+                  <span class="pill-icon">📂</span>
+                  <span class="pill-text">Ver todas as 36 ferramentas</span>
+                  <span class="pill-arrow">▶</span>
+                </button>
+                <span class="skill-category-badge" id="active-tool-skill-badge">OSINT</span>
+              </div>
+              <div class="tool-title-row">
+                <h2 class="active-tool-title" id="active-tool-name">Selecione uma Ferramenta</h2>
+              </div>
+              <p class="active-tool-desc" id="active-tool-description">
+                Escolha uma das 36 ferramentas no menu lateral para visualizar seus parâmetros, gerar exemplos e executar consultas em tempo real.
+              </p>
+            </div>
+
+            <!-- Dynamic Form Container -->
+            <div class="tool-form-container">
+              <form id="dynamic-tool-form" class="dynamic-tool-form" onsubmit="return false;">
+                <div class="form-fields-grid" id="form-fields-grid">
+                  <!-- Dynamically populated parameters form -->
+                </div>
+
+                <!-- Form Controls & Actions -->
+                <div class="form-actions-bar">
+                  <div class="left-actions">
+                    <button type="button" class="btn-secondary" id="btn-prefill-example">
+                      <span class="btn-icon">✨</span> Preencher Exemplo
+                    </button>
+                    <button type="button" class="btn-ghost" id="btn-clear-form">
+                      <span class="btn-icon">↺</span> Limpar
+                    </button>
+                  </div>
+                  <div class="right-actions">
+                    <button type="button" class="btn-primary" id="btn-execute-tool">
+                      <span class="btn-icon" id="btn-exec-icon">🚀</span>
+                      <span id="btn-exec-text">Executar Ferramenta</span>
+                    </button>
+                  </div>
+                </div>
+              </form>
+            </div>
+          </div>
+        </section>
+
+        <!-- Right: Results & Output Viewer -->
+        <section class="results-viewer-panel" id="results-viewer-panel">
+          <div class="results-card">
+            <!-- Output Header & Meta -->
+            <div class="results-header">
+              <div class="results-status-meta">
+                <span class="output-status-pill status-ready" id="result-status-pill">
+                  <span class="status-indicator"></span>
+                  <span id="result-status-text">Pronto</span>
+                </span>
+                <span class="execution-timer" id="result-duration-badge" style="display: none;">
+                  ⏱️ <span id="result-duration-ms">0</span> ms
+                </span>
+              </div>
+
+              <!-- Output View Mode Tabs -->
+              <div class="output-view-selector" role="tablist">
+                <button type="button" class="output-tab-btn active" data-output-tab="visual" id="tab-out-visual">
+                  Visual Inteligente
+                </button>
+                <button type="button" class="output-tab-btn" data-output-tab="json" id="tab-out-json">
+                  JSON Estruturado
+                </button>
+                <button type="button" class="output-tab-btn" data-output-tab="raw" id="tab-out-raw">
+                  Bruto / Texto
+                </button>
+                <button type="button" class="btn-icon-copy" id="btn-copy-result" title="Copiar Resultado">
+                  📋
+                </button>
+              </div>
+            </div>
+
+            <!-- Output Body Containers -->
+            <div class="results-body">
+              <!-- Visual Smart View (Card renderings for Maigret, TLS, SAST, etc.) -->
+              <div class="output-tab-content active" id="output-view-visual">
+                <div class="empty-state-card" id="output-empty-state">
+                  <div class="empty-icon-radar">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                      <circle cx="12" cy="12" r="9"/>
+                      <path d="M12 3v9l6 3"/>
+                      <circle cx="12" cy="12" r="4"/>
+                    </svg>
+                  </div>
+                  <h3>Nenhuma execução realizada ainda</h3>
+                  <p>Escolha uma ferramenta à esquerda, clique em <strong>Preencher Exemplo</strong> e aperte <strong>Executar Ferramenta</strong> para ver os resultados e inteligência coletada.</p>
+                  <div class="recommended-tools-chips">
+                    <span class="rec-chip" onclick="window.selectToolByName('search_username_maigret')">🔎 Maigret OSINT</span>
+                    <span class="rec-chip" onclick="window.selectToolByName('inspect_http_headers')">🛡️ HTTP Headers</span>
+                    <span class="rec-chip" onclick="window.selectToolByName('map_mitre_attack')">🎯 MITRE ATT&CK</span>
+                    <span class="rec-chip" onclick="window.selectToolByName('scan_secrets')">🔑 Scan Segredos</span>
+                  </div>
+                </div>
+
+                <!-- Live Results Visual Content injected here -->
+                <div class="visual-results-feed" id="visual-results-feed" style="display: none;"></div>
+              </div>
+
+              <!-- JSON Viewer -->
+              <div class="output-tab-content" id="output-view-json">
+                <pre class="code-block-viewer" id="json-viewer-content"><code class="language-json">// O JSON estruturado será exibido aqui</code></pre>
+              </div>
+
+              <!-- Raw / Text / Markdown Viewer -->
+              <div class="output-tab-content" id="output-view-raw">
+                <pre class="raw-text-viewer" id="raw-viewer-content">// Texto bruto ou markdown exibido aqui</pre>
+              </div>
+            </div>
+          </div>
+        </section>
+      </section>
+
+      <!-- VIEW 2: UNIVERSAL TIMELINE & AUDIT LOG -->
+      <section class="view-panel" id="view-timeline" aria-label="Linha do Tempo de Investigações">
+        <div class="timeline-container-card">
+          <div class="timeline-header-bar">
+            <div>
+              <h2 class="section-title">Linha do Tempo Universal & Memória</h2>
+              <p class="section-subtitle">Histórico auditado de todas as chamadas de ferramentas e descobertas gravadas no SQLite persistentemente.</p>
+            </div>
+            <div class="timeline-actions">
+              <select id="timeline-skill-filter" class="form-select-sm">
+                <option value="">Todas as Habilidades</option>
+                <option value="osint_recon">OSINT Recon (Maigret)</option>
+                <option value="security_audit">Security Audit & SAST</option>
+                <option value="appsec">AppSec & OWASP</option>
+                <option value="threat_intel">Threat Intel & MITRE</option>
+                <option value="cloud_container">Cloud & Docker</option>
+                <option value="incident_response">DFIR & Incidentes</option>
+                <option value="rea">Engenharia Reversa (REA)</option>
+                <option value="memory">Memória Geral</option>
+              </select>
+              <button type="button" class="btn-secondary" id="btn-refresh-timeline">
+                <span>🔄</span> Atualizar
+              </button>
+              <button type="button" class="btn-primary" id="btn-record-finding-modal">
+                <span>➕</span> Nova Anotação
+              </button>
+            </div>
+          </div>
+
+          <div class="timeline-events-feed" id="timeline-events-feed">
+            <div class="loading-placeholder">Carregando linha do tempo da investigação...</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- VIEW 3: MARKDOWN INVESTIGATION DOSSIER -->
+      <section class="view-panel" id="view-dossier" aria-label="Exportar Dossiê de Investigação">
+        <div class="dossier-container-card">
+          <div class="dossier-header-bar">
+            <div>
+              <h2 class="section-title">Dossiê e Relatório Completo de Investigação</h2>
+              <p class="section-subtitle">Relatório executivo e técnico em Markdown gerado a partir de todas as descobertas registradas.</p>
+            </div>
+            <div class="dossier-actions">
+              <button type="button" class="btn-secondary" id="btn-copy-dossier">
+                <span>📋</span> Copiar Markdown
+              </button>
+              <button type="button" class="btn-primary" id="btn-download-dossier">
+                <span>💾</span> Baixar Arquivo .md
+              </button>
+            </div>
+          </div>
+          <div class="dossier-viewer-box">
+            <pre class="dossier-markdown-pre" id="dossier-content-pre">Carregando dossiê...</pre>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Modal: Adicionar Anotação / Finding na Memória -->
+    <div class="modal-backdrop" id="finding-modal-backdrop" style="display: none;">
+      <div class="modal-dialog">
+        <div class="modal-header">
+          <h3 class="modal-title">Registrar Descoberta na Memória Persistente</h3>
+          <button type="button" class="modal-close-btn" id="btn-close-finding-modal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <form id="new-finding-form">
+            <div class="form-group">
+              <label for="finding-title" class="form-label">Título da Descoberta / Hipótese</label>
+              <input type="text" id="finding-title" class="form-input" placeholder="Ex: Perfil malicioso detectado no GitHub" required>
+            </div>
+            <div class="form-group">
+              <label for="finding-category" class="form-label">Categoria</label>
+              <select id="finding-category" class="form-select">
+                <option value="finding">Achado Técnico (Finding)</option>
+                <option value="hypothesis">Hipótese de Ameaça</option>
+                <option value="ioc">Indicador de Comprometimento (IOC)</option>
+                <option value="vulnerability">Vulnerabilidade Identificada</option>
+                <option value="note">Nota Geral</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="finding-skill" class="form-label">Habilidade Relacionada</label>
+              <select id="finding-skill" class="form-select">
+                <option value="osint_recon">OSINT Recon (Maigret)</option>
+                <option value="threat_intel">Threat Intelligence</option>
+                <option value="security_audit">Security Audit & SAST</option>
+                <option value="appsec">AppSec & OWASP</option>
+                <option value="cloud_container">Cloud Hardening</option>
+                <option value="incident_response">Incident Response</option>
+                <option value="rea">Reverse Engineering</option>
+                <option value="general">Geral</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="finding-tags" class="form-label">Tags (separadas por vírgula)</label>
+              <input type="text" id="finding-tags" class="form-input" placeholder="Ex: osint, username, critical, phishing">
+            </div>
+            <div class="form-group">
+              <label for="finding-content" class="form-label">Conteúdo / Detalhes</label>
+              <textarea id="finding-content" class="form-textarea" rows="4" placeholder="Descreva os fatos observados, evidências e impacto..." required></textarea>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn-ghost" id="btn-cancel-finding">Cancelar</button>
+              <button type="submit" class="btn-primary" id="btn-submit-finding">Salvar na Memória</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal: Configuração de Modo Stealth & Nó Onion -->
+    <div class="modal-backdrop" id="stealth-modal" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="stealth-modal-title">
+      <div class="modal-dialog modal-stealth">
+        <div class="modal-header">
+          <div class="modal-title-with-icon">
+            <span class="modal-title-icon">🧅</span>
+            <div>
+              <h2 class="modal-title" id="stealth-modal-title">Camuflagem de Tráfego & Nó Onion (Tor)</h2>
+              <span class="modal-subtitle">Anonimização e roteamento OpSec para investigações OSINT & Recon</span>
+            </div>
+          </div>
+          <button type="button" class="modal-close-btn" id="btn-close-stealth-modal" aria-label="Fechar Modal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <!-- Status Banner -->
+          <div class="stealth-status-card" id="stealth-status-card">
+            <div class="stealth-status-header">
+              <div class="stealth-status-main">
+                <span class="stealth-pulse-indicator status-off" id="stealth-indicator-dot"></span>
+                <div>
+                  <div class="stealth-state-title" id="stealth-card-title">Modo Stealth Desativado</div>
+                  <div class="stealth-state-desc" id="stealth-card-desc">Conexões são realizadas diretamente com seu endereço IP real.</div>
+                </div>
+              </div>
+              <button type="button" class="btn-action-sm btn-test-tor" id="btn-test-tor">
+                <span class="btn-icon">⚡</span> Testar Conexão Tor
+              </button>
+            </div>
+            <div class="stealth-ip-info hidden" id="stealth-ip-banner">
+              <div class="ip-info-item">
+                <span class="ip-label">IP de Saída Ativo:</span>
+                <span class="ip-value" id="stealth-exit-ip">Verificando...</span>
+              </div>
+              <div class="ip-info-item">
+                <span class="ip-label">Rede Tor:</span>
+                <span class="ip-badge" id="stealth-tor-verified">Não confirmado</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Configuration Form -->
+          <form id="stealth-config-form" class="modal-form">
+            <div class="form-group-toggle">
+              <label class="toggle-container" for="stealth-toggle-input">
+                <input type="checkbox" id="stealth-toggle-input" class="toggle-checkbox">
+                <span class="toggle-slider"></span>
+                <span class="toggle-label-text">
+                  <strong>Ativar Modo Stealth Global</strong>
+                  <small>Força todas as ferramentas de OSINT (Maigret, cabeçalhos, etc.) a rotear pelo nó Tor SOCKS5</small>
+                </span>
+              </label>
+            </div>
+
+            <div class="form-group">
+              <label for="stealth-proxy-url" class="form-label">
+                Endereço do Nó Onion / Gateway Tor SOCKS5
+                <span class="label-hint">(ex: socks5://127.0.0.1:9050 ou 9150)</span>
+              </label>
+              <input type="text" id="stealth-proxy-url" class="form-input" value="socks5://127.0.0.1:9050" placeholder="socks5://127.0.0.1:9050" required>
+            </div>
+
+            <div class="form-group-toggle">
+              <label class="toggle-container" for="stealth-dns-input">
+                <input type="checkbox" id="stealth-dns-input" class="toggle-checkbox" checked>
+                <span class="toggle-slider"></span>
+                <span class="toggle-label-text">
+                  <strong>DNS-over-Tor (socks5h://)</strong>
+                  <small>Resolve consultas DNS remotamente pelo circuito Tor para impedir vazamentos (DNS leaks)</small>
+                </span>
+              </label>
+            </div>
+
+            <div class="stealth-quick-presets">
+              <span class="preset-label">Predefinições Rápidas:</span>
+              <button type="button" class="btn-preset" data-preset="socks5://127.0.0.1:9050">Tor Daemon (9050)</button>
+              <button type="button" class="btn-preset" data-preset="socks5://127.0.0.1:9150">Tor Browser (9150)</button>
+              <button type="button" class="btn-preset" data-preset="socks5://127.0.0.1:1080">SOCKS5 Local (1080)</button>
+            </div>
+
+            <div class="stealth-tips-box">
+              <span class="tip-icon">🛡️</span>
+              <div class="tip-text">
+                <strong>Instruções de Inicialização Tor:</strong> No Windows, inicie o daemon executando <code>tor.exe</code>, abra o <strong>Tor Browser</strong> (escuta na porta 9150 por padrão) ou use um container Docker SOCKS5.
+              </div>
+            </div>
+
+            <div class="modal-footer">
+              <button type="button" class="btn-ghost" id="btn-cancel-stealth">Fechar</button>
+              <button type="submit" class="btn-primary" id="btn-save-stealth">Salvar Configuração</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Notification Toast Container -->
+    <div class="toast-container" id="toast-container" aria-live="polite"></div>
+  </div>
+
+  <script src="/static/app.js?v=4.2"></script>
+</body>
+</html>

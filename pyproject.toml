@@ -6,6 +6,7 @@ readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
     "capstone>=5.0.9",
+    "maigret>=0.6.6",
     "mcp>=1.0.0",
     "pefile>=2024.8.26",
     "pyelftools>=0.33",

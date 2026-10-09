@@ -12,3 +12,4 @@ wheels/
 # Investigation runtime memory database
 .mcp_memory/
 *.db
+reports/

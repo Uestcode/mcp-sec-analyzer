@@ -35,6 +35,14 @@ async def main():
     sp = dns_data.get("email_security_posture", {})
     print(f"  - DNS Posture for github.com: SPF={sp.get('spf_assessment')} | DMARC={sp.get('dmarc_assessment')}")
 
+    stats_res = await server.call_tool("get_maigret_stats", {})
+    stats_data = json.loads(stats_res.content[0].text)
+    print(f"  - Maigret OSINT DB: {stats_data.get('total_supported_sites')} sites supported")
+
+    maigret_res = await server.call_tool("search_username_maigret", {"username": "octocat", "site": "GitHub", "timeout": 8})
+    maigret_data = json.loads(maigret_res.content[0].text)
+    print(f"  - Maigret Search 'octocat': Found {maigret_data.get('total_accounts_found')} accounts ({', '.join([a['site'] for a in maigret_data.get('accounts', [])])})")
+
     # 3. Threat Intelligence & Defense Mapping
     print("\n[3] Testing Threat Intelligence:")
     mitre_res = await server.call_tool("map_mitre_attack", {"query": "process injection"})
