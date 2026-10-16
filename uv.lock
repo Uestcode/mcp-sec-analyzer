@@ -1352,7 +1352,7 @@ wheels = [
 
 [[package]]
 name = "mcp-sec-analyzer"
-version = "0.1.0"
+version = "3.0.0"
 source = { editable = "." }
 dependencies = [
     { name = "capstone" },
@@ -1360,6 +1360,8 @@ dependencies = [
     { name = "mcp" },
     { name = "pefile" },
     { name = "pyelftools" },
+    { name = "starlette" },
+    { name = "uvicorn" },
 ]
 
 [package.metadata]
@@ -1369,6 +1371,8 @@ requires-dist = [
     { name = "mcp", specifier = ">=1.0.0" },
     { name = "pefile", specifier = ">=2024.8.26" },
     { name = "pyelftools", specifier = ">=0.33" },
+    { name = "starlette", specifier = ">=0.35.0" },
+    { name = "uvicorn", specifier = ">=0.25.0" },
 ]
 
 [[package]]
@@ -2498,8 +2502,8 @@ name = "uvicorn"
 version = "0.54.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "click", marker = "python_full_version < '3.12' or python_full_version >= '3.14' or sys_platform != 'emscripten'" },
-    { name = "h11", marker = "python_full_version < '3.12' or python_full_version >= '3.14' or sys_platform != 'emscripten'" },
+    { name = "click" },
+    { name = "h11" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/da/34/30e9280707135d2cfc589dfff3cb796bd07a3aeb1a3e415ba09dd89d7bb4/uvicorn-0.54.0.tar.gz", hash = "sha256:a2e33cbfaa0306f8e6b0c13e0cb89d7d7a2da3e62b90c66e18c33d9807b28620", size = 112283, upload-time = "2026-09-25T06:52:37.601Z" }
 wheels = [

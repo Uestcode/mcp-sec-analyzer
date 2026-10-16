@@ -1,6 +1,6 @@
 # Unified Cybersecurity MCP Hub
 
-Servidor MCP (*Model Context Protocol*) avançado e modular que consolida **todas as principais áreas da cibersegurança** em um único hub com **36 ferramentas executáveis** organizadas em **8 habilidades ativas**, equipado com um motor de **memória persistente universal (SQLite)**, playbooks em padrão **Agent Skills** e uma **Interface Web SOC Interativa**.
+Servidor MCP (*Model Context Protocol*) avançado e modular que consolida **todas as principais áreas da cibersegurança** em um único hub com **38 ferramentas executáveis** organizadas em **8 habilidades ativas**, equipado com um motor de **memória persistente universal (SQLite)**, playbooks em padrão **Agent Skills** e uma **Interface Web SOC Interativa**.
 
 ---
 
@@ -18,27 +18,29 @@ MCP/
 │   └── mcp_sec_analyzer/
 │       ├── core/                         # Núcleo da plataforma
 │       │   ├── memory.py                 # Motor SQLite de persistência universal
+│       │   ├── stealth.py                # Túnel SOCKS5h Tor / Camuflagem Onion
 │       │   └── decorator.py              # Decorador @skill_tool de auditoria automática
 │       ├── skills/                       # Habilidades Especializadas
 │       │   ├── memory_skill.py           # 1. Memória Persistente e Linha do Tempo (5 ferramentas)
 │       │   ├── rea/                      # 2. Engenharia Reversa & Binários REA (12 ferramentas)
 │       │   ├── security_audit/           # 3. Auditoria de Código, Segredos e CVEs (3 ferramentas)
 │       │   ├── appsec/                   # 4. AppSec, OWASP Top 10 e Prompt Injection (3 ferramentas)
-│       │   ├── osint_recon/              # 5. Reconhecimento Passivo & Superfície / Maigret (5 ferramentas)
+│       │   ├── osint_recon/              # 5. Reconhecimento Passivo & Superfície / Maigret (7 ferramentas)
 │       │   ├── threat_intel/             # 6. Inteligência de Ameaças & MITRE ATT&CK (3 ferramentas)
 │       │   ├── cloud_container/          # 7. Segurança em Nuvem & Containers (2 ferramentas)
 │       │   └── incident_response/        # 8. Forense Digital & Resposta a Incidentes (2 ferramentas)
 │       ├── web/                          # Console Web SOC Interativo (Starlette + Vanilla CSS/JS)
 │       │   ├── api.py                    # REST API e ponte de execução MCP
+│       │   ├── launcher.py               # Servidor Web e CLI runner
 │       │   └── static/                   # Frontend SOC (Dark Mode Cyberpunk, visualizador e timeline)
-│       └── server.py                     # Hub MCP Central (36 ferramentas registradas)
+│       └── server.py                     # Hub MCP Central (38 ferramentas registradas)
 ├── web.py                                # Launcher do Dashboard Web (porta 8000)
 └── main.py                               # Ponto de entrada stdio MCP
 ```
 
 ---
 
-## 🛠️ Matriz Geral das 36 Ferramentas
+## 🛠️ Matriz Geral das 38 Ferramentas
 
 | Habilidade | Ferramentas | Descrição e Frameworks |
 | :--- | :--- | :--- |
@@ -68,7 +70,11 @@ O hub inclui um sistema avançado de privacidade e anonimização de tráfego de
 Para abrir o console SOC completo no navegador e executar ferramentas com 1-clique:
 
 ```bash
+# Opção 1: Via script direto
 uv run python web.py --open
+
+# Opção 2: Via comando CLI do pacote
+uv run mcp-sec-dashboard --open
 ```
 
 Acesse em: **`http://127.0.0.1:8000`**

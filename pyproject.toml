@@ -1,7 +1,7 @@
 [project]
 name = "mcp-sec-analyzer"
-version = "0.1.0"
-description = "MCP Server for Defensive Security, Binary Triage, and Reverse Engineering Analysis"
+version = "3.0.0"
+description = "MCP Server for Defensive Security, Binary Triage, Reverse Engineering, OSINT and Web SOC Dashboard"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
@@ -10,10 +10,13 @@ dependencies = [
     "mcp>=1.0.0",
     "pefile>=2024.8.26",
     "pyelftools>=0.33",
+    "starlette>=0.35.0",
+    "uvicorn>=0.25.0",
 ]
 
 [project.scripts]
 mcp-sec-analyzer = "mcp_sec_analyzer.server:main"
+mcp-sec-dashboard = "mcp_sec_analyzer.web.launcher:main"
 
 [build-system]
 requires = ["hatchling"]

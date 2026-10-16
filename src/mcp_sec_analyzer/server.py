@@ -118,6 +118,8 @@ def list_skills() -> dict[str, Any]:
                     "lookup_dns_records",
                     "search_username_maigret",
                     "get_maigret_stats",
+                    "configure_stealth_mode",
+                    "test_tor_connectivity",
                 ],
             },
             {
