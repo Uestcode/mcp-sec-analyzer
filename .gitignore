@@ -13,3 +13,6 @@ wheels/
 .mcp_memory/
 *.db
 reports/
+
+# Archives
+*.zip
